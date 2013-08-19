@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public class Main implements ApplicationListener {
     private OrthographicCamera camera;
@@ -21,6 +22,8 @@ public class Main implements ApplicationListener {
                 wallTexture,
                 floorTexture;
     private Entity[][] level;
+    private ShapeRenderer shapeRenderer;
+    private boolean drawHitBox = true;
 
     @Override
     public void create() {
@@ -28,11 +31,12 @@ public class Main implements ApplicationListener {
         camera.setToOrtho(false, 1024f, 576f);
         spriteBatch = new SpriteBatch();
         background = new Texture(Gdx.files.internal("assets/sprites/background.png"));
-        player = new Player(spriteBatch);
         wallTexture = new Texture(Gdx.files.internal("assets/sprites/wall.png"));
         floorTexture = new Texture(Gdx.files.internal("assets/sprites/floor.png"));
         level  = new Entity[18][32];
         createLevel();
+        player = new Player(spriteBatch, level);
+        shapeRenderer = new ShapeRenderer();
     }
 
     @Override
@@ -51,6 +55,21 @@ public class Main implements ApplicationListener {
         }
         player.render();
         spriteBatch.end();
+
+        if (drawHitBox) {
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Rectangle);
+            shapeRenderer.rect(player.hitbox().getX(), player.hitbox().getY(), player.hitbox().getWidth(), player.hitbox().getHeight());
+
+            for (Entity[] levelRow: level) {
+                for (Entity block : levelRow) {
+                    if (block != null)
+                        shapeRenderer.rect(block.hitbox().getX(), block.hitbox().getY(), block.hitbox().getWidth(), block.hitbox().getHeight());
+                }
+            }
+
+            shapeRenderer.end();
+        }
 
         if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
